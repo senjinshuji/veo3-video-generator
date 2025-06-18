@@ -72,17 +72,33 @@ async function generateVideo(prompt, options = {}) {
     });
 
     console.log('✅ Video generated successfully!');
-    console.log(`🔗 Video URL: ${result.video.url}`);
+    console.log('API Response:', JSON.stringify(result, null, 2));
+    
+    // Handle different response structures
+    const videoUrl = result.video?.url || result.url || result.data?.video?.url;
+    
+    if (!videoUrl) {
+      console.error('❌ No video URL found in response');
+      throw new Error('Video URL not found in API response');
+    }
+    
+    console.log(`🔗 Video URL: ${videoUrl}`);
 
     if (outputPath) {
       console.log(`💾 Downloading video to ${outputPath}...`);
-      const response = await fetch(result.video.url);
+      const response = await fetch(videoUrl);
       const buffer = await response.arrayBuffer();
       writeFileSync(outputPath, Buffer.from(buffer));
       console.log(`✅ Video saved to ${outputPath}`);
     }
 
-    return result;
+    // Normalize response format
+    return {
+      video: {
+        url: videoUrl
+      },
+      ...result
+    };
   } catch (error) {
     console.error('❌ Error generating video:', error.message);
     if (error.body && error.body.detail) {
