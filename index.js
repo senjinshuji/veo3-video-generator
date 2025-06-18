@@ -91,24 +91,47 @@ async function generateVideo(prompt, options = {}) {
     });
 
     console.log('✅ Video generated successfully!');
+    console.log('🔍 Full API Response:', JSON.stringify(result, null, 2));
     
-    if (!result.video || !result.video.url) {
-      console.error('❌ Invalid API response structure');
-      console.error('Response:', JSON.stringify(result, null, 2));
-      throw new Error('Invalid API response: missing video URL');
+    // Check all possible response structures
+    let videoUrl = null;
+    if (result.video?.url) {
+      videoUrl = result.video.url;
+    } else if (result.url) {
+      videoUrl = result.url;
+    } else if (result.data?.video?.url) {
+      videoUrl = result.data.video.url;
+    } else if (result.data?.url) {
+      videoUrl = result.data.url;
+    } else if (result.output?.url) {
+      videoUrl = result.output.url;
+    } else if (result.output?.video?.url) {
+      videoUrl = result.output.video.url;
     }
     
-    console.log(`🔗 Video URL: ${result.video.url}`);
+    if (!videoUrl) {
+      console.error('❌ No video URL found in any expected location');
+      console.error('Available keys:', Object.keys(result));
+      throw new Error('Video URL not found in API response');
+    }
+    
+    console.log(`🔗 Video URL: ${videoUrl}`);
 
     if (outputPath) {
       console.log(`💾 Downloading video to ${outputPath}...`);
-      const response = await fetch(result.video.url);
+      const response = await fetch(videoUrl);
       const buffer = await response.arrayBuffer();
       writeFileSync(outputPath, Buffer.from(buffer));
       console.log(`✅ Video saved to ${outputPath}`);
     }
 
-    return result;
+    // Return normalized response
+    return {
+      video: {
+        url: videoUrl
+      },
+      ...result
+    };
   } catch (error) {
     console.error('❌ Error generating video:', error.message);
     if (error.body && error.body.detail) {
