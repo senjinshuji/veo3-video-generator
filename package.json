@@ -2,11 +2,11 @@
   "name": "veo3-video-generator",
   "version": "1.0.0",
   "description": "Video generation tool using fal.ai Veo3 API",
-  "main": "index.js",
+  "main": "server.js",
   "type": "module",
   "scripts": {
     "generate": "node index.js",
-    "dev": "node --watch index.js",
+    "dev": "node --watch server.js",
     "start": "node server.js",
     "server": "node --watch server.js"
   },
