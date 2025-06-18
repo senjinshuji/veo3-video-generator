@@ -4,6 +4,18 @@ import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
+// Polyfill for File in Node.js environment
+if (typeof globalThis.File === 'undefined') {
+  const { Blob } = await import('buffer');
+  globalThis.File = class File extends Blob {
+    constructor(chunks, name, options = {}) {
+      super(chunks, options);
+      this.name = name;
+      this.lastModified = Date.now();
+    }
+  };
+}
+
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -41,11 +53,12 @@ async function generateVideo(prompt, options = {}) {
     // Upload image to fal.storage
     console.log('📤 Uploading image to fal.storage...');
     const imageBuffer = readFileSync(imagePath);
-    const imageBlob = new Blob([imageBuffer], { 
-      type: imagePath.endsWith('.png') ? 'image/png' : 'image/jpeg' 
-    });
+    const mimeType = imagePath.endsWith('.png') ? 'image/png' : 'image/jpeg';
+    const fileName = 'image.' + imagePath.split('.').pop();
     
-    const uploadResult = await fal.storage.upload(imageBlob);
+    // Convert buffer to File object (required by fal.storage.upload)
+    const imageFile = new File([imageBuffer], fileName, { type: mimeType });
+    const uploadResult = await fal.storage.upload(imageFile);
     input.image_url = uploadResult;
     console.log(`✅ Image uploaded: ${uploadResult}`);
   }
