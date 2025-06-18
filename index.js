@@ -6,14 +6,18 @@ import { fileURLToPath } from 'url';
 
 // Polyfill for File in Node.js environment
 if (typeof globalThis.File === 'undefined') {
-  const { Blob } = await import('buffer');
-  globalThis.File = class File extends Blob {
-    constructor(chunks, name, options = {}) {
-      super(chunks, options);
-      this.name = name;
-      this.lastModified = Date.now();
-    }
-  };
+  try {
+    const { Blob } = await import('buffer');
+    globalThis.File = class File extends Blob {
+      constructor(chunks, name, options = {}) {
+        super(chunks, options);
+        this.name = name;
+        this.lastModified = Date.now();
+      }
+    };
+  } catch (e) {
+    console.warn('Could not create File polyfill:', e.message);
+  }
 }
 
 dotenv.config();
@@ -35,8 +39,17 @@ async function generateVideo(prompt, options = {}) {
 
   console.log('🎬 Starting video generation...');
   
-  // Convert duration to API format (Veo3 only accepts '8s' for now)
-  const apiDuration = '8s';  // Veo3 currently only supports 8 second videos
+  // Convert duration to API format
+  let apiDuration;
+  if (imagePath) {
+    // Veo2 image-to-video supports 5s, 6s, 7s, 8s
+    apiDuration = duration === 'short' ? '5s' : 
+                  duration === 'medium' ? '6s' : 
+                  duration === 'long' ? '8s' : '8s';
+  } else {
+    // Veo3 only accepts '8s' for now
+    apiDuration = '8s';
+  }
   
   const input = {
     prompt,
@@ -68,7 +81,11 @@ async function generateVideo(prompt, options = {}) {
   console.log(`📐 Aspect Ratio: ${aspectRatio}`);
 
   try {
-    const result = await fal.subscribe('fal-ai/veo3', {
+    // Use Veo2 image-to-video as fallback if image is provided
+    const apiEndpoint = imagePath ? 'fal-ai/veo2/image-to-video' : 'fal-ai/veo3';
+    console.log(`🎯 Using API endpoint: ${apiEndpoint}`);
+    
+    const result = await fal.subscribe(apiEndpoint, {
       input,
       logs: true,
       onQueueUpdate: (update) => {
