@@ -23,9 +23,12 @@ async function generateVideo(prompt, options = {}) {
 
   console.log('🎬 Starting video generation...');
   
+  // Convert duration to API format (Veo3 only accepts '8s' for now)
+  const apiDuration = '8s';  // Veo3 currently only supports 8 second videos
+  
   const input = {
     prompt,
-    duration,
+    duration: apiDuration,
     aspect_ratio: aspectRatio
   };
 
@@ -53,9 +56,15 @@ async function generateVideo(prompt, options = {}) {
         if (update.status === 'IN_PROGRESS') {
           console.log(`⏳ Progress: ${update.logs || 'Processing...'}`);
           if (options.onProgress && typeof options.onProgress === 'function') {
-            const progressMatch = update.logs?.match(/(\d+)%/);
-            if (progressMatch) {
-              options.onProgress(parseInt(progressMatch[1]));
+            // Check if logs is a string before trying to match
+            if (typeof update.logs === 'string') {
+              const progressMatch = update.logs.match(/(\d+)%/);
+              if (progressMatch) {
+                options.onProgress(parseInt(progressMatch[1]));
+              }
+            } else {
+              // Default progress update
+              options.onProgress(50);
             }
           }
         }
@@ -76,6 +85,9 @@ async function generateVideo(prompt, options = {}) {
     return result;
   } catch (error) {
     console.error('❌ Error generating video:', error.message);
+    if (error.body && error.body.detail) {
+      console.error('Error details:', JSON.stringify(error.body.detail, null, 2));
+    }
     throw error;
   }
 }

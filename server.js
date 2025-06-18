@@ -57,7 +57,10 @@ app.post('/api/generate', upload.single('image'), async (req, res) => {
         }
         
         const taskId = generateTaskId();
-        const options = { duration, aspectRatio };
+        const options = { 
+            duration, 
+            aspectRatio
+        };
         
         // Handle image upload
         if (req.file) {
@@ -116,8 +119,22 @@ async function generateVideoWithProgress(taskId, prompt, options, io) {
         
     } catch (error) {
         console.error('Video generation error:', error);
+        
+        let errorMessage = 'Video generation failed';
+        
+        // Handle specific error cases
+        if (error.status === 403 && error.body?.detail?.includes('Exhausted balance')) {
+            errorMessage = '❌ APIの残高が不足しています。fal.aiダッシュボードで残高を確認してください。';
+        } else if (error.status === 422) {
+            errorMessage = '❌ リクエストパラメータにエラーがあります。';
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+        
         io.emit(`error-${taskId}`, {
-            message: error.message || 'Video generation failed'
+            message: errorMessage,
+            status: error.status,
+            details: error.body?.detail
         });
         
         // Clean up temp file on error
@@ -145,9 +162,12 @@ if (!existsSync(tempDir)) {
 
 // Start server
 const PORT = process.env.PORT || 3000;
-const HOST = '0.0.0.0'; // Important for Render deployment
+const HOST = '0.0.0.0'; // Listen on all interfaces
 httpServer.listen(PORT, HOST, () => {
-    console.log(`🚀 Server running at http://localhost:${PORT}`);
+    console.log(`🚀 Server running on:`);
+    console.log(`   - http://localhost:${PORT}`);
+    console.log(`   - http://127.0.0.1:${PORT}`);
+    console.log(`   - http://172.31.105.14:${PORT}`);
     console.log(`📁 Serving from ${join(__dirname, 'public')}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });

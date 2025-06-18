@@ -7,3 +7,5 @@ node_modules/
 .DS_Store
 output/
 temp/
+server.log
+nohup.out
