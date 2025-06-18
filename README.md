@@ -63,20 +63,28 @@ npm run generate -- "ネオン街を歩くロボット" --duration medium --aspe
 
 ## 🌐 Renderへのデプロイ
 
-1. GitHubにリポジトリをプッシュ
+### 自動デプロイ（render.yaml使用）
 
-2. [Render](https://render.com)でアカウントを作成
+1. [Render](https://render.com)でアカウントを作成
 
-3. 新しいWeb Serviceを作成
-   - GitHubリポジトリを接続
-   - ビルドコマンド: `npm install`
-   - スタートコマンド: `npm start`
+2. 新しいWeb Serviceを作成
+   - 「New +」→「Web Service」
+   - GitHubアカウントを接続
+   - `veo3-video-generator`リポジトリを選択
+   - 「Connect」をクリック
 
-4. 環境変数を設定
-   - `FAL_KEY`: fal.ai APIキー
-   - `PORT`: (Renderが自動設定)
+3. 環境変数を設定
+   - Environmentタブで`FAL_KEY`を追加
+   - 値: あなたのfal.ai APIキー
+
+4. 「Create Web Service」をクリック
 
 5. デプロイ完了！
+   - URLは `https://veo3-video-generator.onrender.com` のような形式になります
+
+### 注意事項
+- 無料プランの場合、15分間アクセスがないとスリープします
+- 初回アクセス時は起動に30秒程度かかる場合があります
 
 ## 📋 環境変数
 
