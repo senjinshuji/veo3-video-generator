@@ -38,10 +38,16 @@ async function generateVideo(prompt, options = {}) {
       throw new Error(`Image file not found: ${imagePath}`);
     }
     
+    // Upload image to fal.storage
+    console.log('📤 Uploading image to fal.storage...');
     const imageBuffer = readFileSync(imagePath);
-    const base64Image = imageBuffer.toString('base64');
-    const mimeType = imagePath.endsWith('.png') ? 'image/png' : 'image/jpeg';
-    input.image_url = `data:${mimeType};base64,${base64Image}`;
+    const imageBlob = new Blob([imageBuffer], { 
+      type: imagePath.endsWith('.png') ? 'image/png' : 'image/jpeg' 
+    });
+    
+    const uploadResult = await fal.storage.upload(imageBlob);
+    input.image_url = uploadResult;
+    console.log(`✅ Image uploaded: ${uploadResult}`);
   }
 
   console.log(`📝 Prompt: ${prompt}`);
@@ -72,33 +78,24 @@ async function generateVideo(prompt, options = {}) {
     });
 
     console.log('✅ Video generated successfully!');
-    console.log('API Response:', JSON.stringify(result, null, 2));
     
-    // Handle different response structures
-    const videoUrl = result.video?.url || result.url || result.data?.video?.url;
-    
-    if (!videoUrl) {
-      console.error('❌ No video URL found in response');
-      throw new Error('Video URL not found in API response');
+    if (!result.video || !result.video.url) {
+      console.error('❌ Invalid API response structure');
+      console.error('Response:', JSON.stringify(result, null, 2));
+      throw new Error('Invalid API response: missing video URL');
     }
     
-    console.log(`🔗 Video URL: ${videoUrl}`);
+    console.log(`🔗 Video URL: ${result.video.url}`);
 
     if (outputPath) {
       console.log(`💾 Downloading video to ${outputPath}...`);
-      const response = await fetch(videoUrl);
+      const response = await fetch(result.video.url);
       const buffer = await response.arrayBuffer();
       writeFileSync(outputPath, Buffer.from(buffer));
       console.log(`✅ Video saved to ${outputPath}`);
     }
 
-    // Normalize response format
-    return {
-      video: {
-        url: videoUrl
-      },
-      ...result
-    };
+    return result;
   } catch (error) {
     console.error('❌ Error generating video:', error.message);
     if (error.body && error.body.detail) {
