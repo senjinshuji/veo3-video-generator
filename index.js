@@ -40,17 +40,8 @@ async function generateVideo(prompt, options = {}) {
   console.log('🎬 Starting video generation...');
   
   // Convert duration to API format
-  // Veo3 uses numeric duration (in seconds)
-  let apiDuration;
-  if (duration === 'short') {
-    apiDuration = 5;
-  } else if (duration === 'medium') {
-    apiDuration = 8;
-  } else if (duration === 'long') {
-    apiDuration = 10;
-  } else {
-    apiDuration = 8; // default
-  }
+  // Veo3 only accepts '8s' for now
+  const apiDuration = '8s';
   
   // Prepare input parameters
   const input = {
