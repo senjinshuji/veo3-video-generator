@@ -73,6 +73,7 @@ async function generateVideo(prompt, options = {}) {
   console.log(`📝 Prompt: ${prompt}`);
   console.log(`⏱️  Duration: ${apiDuration}`);
   console.log(`📐 Aspect Ratio: ${aspectRatio}`);
+  console.log('🔍 Full input parameters:', JSON.stringify(input, null, 2));
 
   try {
     // Always use Veo3 for both text-to-video and image-to-video
@@ -102,6 +103,7 @@ async function generateVideo(prompt, options = {}) {
     });
 
     console.log('✅ Video generated successfully!');
+    console.log('🔍 API Response:', JSON.stringify(result, null, 2));
     
     // Handle fal.ai response structure
     let videoUrl;
