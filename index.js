@@ -40,32 +40,25 @@ async function generateVideo(prompt, options = {}) {
   console.log('🎬 Starting video generation...');
   
   // Convert duration to API format
+  // Veo3 uses numeric duration (in seconds)
   let apiDuration;
-  if (imagePath) {
-    // Veo2 image-to-video supports 5s, 6s, 7s, 8s
-    apiDuration = duration === 'short' ? '5s' : 
-                  duration === 'medium' ? '6s' : 
-                  duration === 'long' ? '8s' : '8s';
+  if (duration === 'short') {
+    apiDuration = 5;
+  } else if (duration === 'medium') {
+    apiDuration = 8;
+  } else if (duration === 'long') {
+    apiDuration = 10;
   } else {
-    // Veo3 only accepts '8s' for now
-    apiDuration = '8s';
+    apiDuration = 8; // default
   }
   
   // Prepare input parameters
   const input = {
     prompt,
-    duration: apiDuration
+    duration: apiDuration,
+    aspect_ratio: aspectRatio,
+    audio_enabled: false // Can be made configurable later
   };
-  
-  // Add aspect_ratio only for text-to-video (Veo3)
-  // Veo2 image-to-video uses different aspect ratio values
-  if (!imagePath) {
-    input.aspect_ratio = aspectRatio;
-  } else if (aspectRatio && aspectRatio !== '16:9') {
-    // Convert aspect ratio for Veo2 if needed
-    input.aspect_ratio = aspectRatio === '9:16' ? '9:16' : 
-                        aspectRatio === '1:1' ? 'auto' : '16:9';
-  }
 
   if (imagePath) {
     console.log(`🖼️  Using image: ${imagePath}`);
@@ -91,8 +84,8 @@ async function generateVideo(prompt, options = {}) {
   console.log(`📐 Aspect Ratio: ${aspectRatio}`);
 
   try {
-    // Use Veo2 image-to-video as fallback if image is provided
-    const apiEndpoint = imagePath ? 'fal-ai/veo2/image-to-video' : 'fal-ai/veo3';
+    // Always use Veo3 for both text-to-video and image-to-video
+    const apiEndpoint = 'fal-ai/veo3';
     console.log(`🎯 Using API endpoint: ${apiEndpoint}`);
     
     const result = await fal.subscribe(apiEndpoint, {
