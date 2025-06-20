@@ -10,7 +10,7 @@ AI動画生成ツール - fal.aiのVeo3 APIを使用して、テキストプロ�
 
 - 📝 テキストプロンプトから動画生成
 - 🖼️ 画像をアップロードして動画化
-- ⏱️ 動画の長さ選択（5秒/8秒/10秒）
+- ⏱️ 動画の長さ選択（1秒テスト/8秒）
 - 📐 アスペクト比選択（16:9/9:16/1:1）
 - 📊 リアルタイム進捗表示
 - 💾 生成した動画のダウンロード
@@ -60,6 +60,9 @@ npm run generate -- "車を高速で走らせる" --image car.jpg
 
 # オプション付き
 npm run generate -- "ネオン街を歩くロボット" --duration medium --aspect-ratio 9:16 --output robot.mp4
+
+# 1秒のテスト動画（画像必須・低コスト）
+npm run generate -- "車を動かす" --image car.jpg --duration test
 ```
 
 ## 🌐 Renderへのデプロイ

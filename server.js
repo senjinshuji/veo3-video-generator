@@ -50,9 +50,14 @@ function generateTaskId() {
 // API endpoint for video generation
 app.post('/api/generate', upload.single('image'), async (req, res) => {
     try {
-        const { prompt, duration = 'short', aspectRatio = '16:9' } = req.body;
+        const { prompt, duration = '8s', aspectRatio = '16:9' } = req.body;
         
-        if (!prompt) {
+        // Test mode requires image, not prompt
+        if (duration === 'test' && !req.file) {
+            return res.status(400).json({ error: 'Test mode requires an image' });
+        }
+        
+        if (!prompt && duration !== 'test') {
             return res.status(400).json({ error: 'Prompt is required' });
         }
         

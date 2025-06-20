@@ -39,17 +39,33 @@ async function generateVideo(prompt, options = {}) {
 
   console.log('🎬 Starting video generation...');
   
-  // Convert duration to API format
-  // Veo3 only accepts '8s' for now
-  const apiDuration = '8s';
+  // Prepare input parameters based on API
+  let input;
+  let apiEndpoint;
   
-  // Prepare input parameters
-  const input = {
-    prompt,
-    duration: apiDuration,
-    aspect_ratio: aspectRatio,
-    audio_enabled: false // Can be made configurable later
-  };
+  // Check if this is a test video request
+  const isTestMode = duration === 'test' || duration === '1s';
+  
+  if (isTestMode && imagePath) {
+    // SVD Turbo for 1-second test videos (image required)
+    apiEndpoint = 'fal-ai/fast-svd-lcm';
+    input = {
+      fps: 25, // 25 frames at 25 FPS = 1 second
+      motion_bucket_id: 127, // Motion intensity (0-255)
+      cond_aug: 0.02, // Conditioning augmentation
+      decoding_t: 1 // Number of frames to decode at a time
+    };
+  } else {
+    // Veo3 for production videos
+    apiEndpoint = 'fal-ai/veo3';
+    const apiDuration = '8s'; // Veo3 only accepts '8s' for now
+    input = {
+      prompt,
+      duration: apiDuration,
+      aspect_ratio: aspectRatio,
+      audio_enabled: false // Can be made configurable later
+    };
+  }
 
   if (imagePath) {
     console.log(`🖼️  Using image: ${imagePath}`);
@@ -70,14 +86,19 @@ async function generateVideo(prompt, options = {}) {
     console.log(`✅ Image uploaded: ${uploadResult}`);
   }
 
-  console.log(`📝 Prompt: ${prompt}`);
-  console.log(`⏱️  Duration: ${apiDuration}`);
-  console.log(`📐 Aspect Ratio: ${aspectRatio}`);
+  if (!isTestMode) {
+    console.log(`📝 Prompt: ${prompt}`);
+    console.log(`⏱️  Duration: 8s`);
+    console.log(`📐 Aspect Ratio: ${aspectRatio}`);
+  } else {
+    console.log('🧪 Test mode: 1-second video');
+    if (!imagePath) {
+      throw new Error('Test mode requires an image. Use --image flag.');
+    }
+  }
   console.log('🔍 Full input parameters:', JSON.stringify(input, null, 2));
 
   try {
-    // Always use Veo3 for both text-to-video and image-to-video
-    const apiEndpoint = 'fal-ai/veo3';
     console.log(`🎯 Using API endpoint: ${apiEndpoint}`);
     
     const result = await fal.subscribe(apiEndpoint, {
@@ -152,7 +173,7 @@ async function main() {
 Usage: npm run generate -- "your prompt here" [options]
 
 Options:
-  --duration <short|medium|long>  Video duration (default: short)
+  --duration <test|short|8s>      Video duration (test=1s with image, default: 8s)
   --aspect-ratio <16:9|9:16|1:1>  Aspect ratio (default: 16:9)
   --image <path>                   Use image as input for video generation
   --output <path>                  Save video to file
