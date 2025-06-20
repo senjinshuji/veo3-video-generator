@@ -119,14 +119,19 @@ async function generateVideo(prompt, options = {}) {
 
     console.log('✅ Video generated successfully!');
     
-    // Both Veo2 and Veo3 should return video.url structure
-    if (!result.video || !result.video.url) {
+    // Handle fal.ai response structure
+    let videoUrl;
+    if (result.data?.video?.url) {
+      // Response wrapped in data object
+      videoUrl = result.data.video.url;
+    } else if (result.video?.url) {
+      // Direct video object
+      videoUrl = result.video.url;
+    } else {
       console.error('❌ Invalid API response structure');
       console.error('Full response:', JSON.stringify(result, null, 2));
-      throw new Error('Invalid API response: missing video.url');
+      throw new Error('Invalid API response: video URL not found');
     }
-    
-    const videoUrl = result.video.url;
     
     console.log(`🔗 Video URL: ${videoUrl}`);
 
@@ -138,12 +143,11 @@ async function generateVideo(prompt, options = {}) {
       console.log(`✅ Video saved to ${outputPath}`);
     }
 
-    // Return normalized response
+    // Return normalized response with video at root level
     return {
       video: {
         url: videoUrl
-      },
-      ...result
+      }
     };
   } catch (error) {
     console.error('❌ Error generating video:', error.message);
