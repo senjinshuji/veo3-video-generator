@@ -51,11 +51,21 @@ async function generateVideo(prompt, options = {}) {
     apiDuration = '8s';
   }
   
+  // Prepare input parameters
   const input = {
     prompt,
-    duration: apiDuration,
-    aspect_ratio: aspectRatio
+    duration: apiDuration
   };
+  
+  // Add aspect_ratio only for text-to-video (Veo3)
+  // Veo2 image-to-video uses different aspect ratio values
+  if (!imagePath) {
+    input.aspect_ratio = aspectRatio;
+  } else if (aspectRatio && aspectRatio !== '16:9') {
+    // Convert aspect ratio for Veo2 if needed
+    input.aspect_ratio = aspectRatio === '9:16' ? '9:16' : 
+                        aspectRatio === '1:1' ? 'auto' : '16:9';
+  }
 
   if (imagePath) {
     console.log(`🖼️  Using image: ${imagePath}`);
@@ -108,29 +118,15 @@ async function generateVideo(prompt, options = {}) {
     });
 
     console.log('✅ Video generated successfully!');
-    console.log('🔍 Full API Response:', JSON.stringify(result, null, 2));
     
-    // Check all possible response structures
-    let videoUrl = null;
-    if (result.video?.url) {
-      videoUrl = result.video.url;
-    } else if (result.url) {
-      videoUrl = result.url;
-    } else if (result.data?.video?.url) {
-      videoUrl = result.data.video.url;
-    } else if (result.data?.url) {
-      videoUrl = result.data.url;
-    } else if (result.output?.url) {
-      videoUrl = result.output.url;
-    } else if (result.output?.video?.url) {
-      videoUrl = result.output.video.url;
+    // Both Veo2 and Veo3 should return video.url structure
+    if (!result.video || !result.video.url) {
+      console.error('❌ Invalid API response structure');
+      console.error('Full response:', JSON.stringify(result, null, 2));
+      throw new Error('Invalid API response: missing video.url');
     }
     
-    if (!videoUrl) {
-      console.error('❌ No video URL found in any expected location');
-      console.error('Available keys:', Object.keys(result));
-      throw new Error('Video URL not found in API response');
-    }
+    const videoUrl = result.video.url;
     
     console.log(`🔗 Video URL: ${videoUrl}`);
 
