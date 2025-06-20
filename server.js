@@ -52,12 +52,7 @@ app.post('/api/generate', upload.single('image'), async (req, res) => {
     try {
         const { prompt, duration = '8s', aspectRatio = '16:9' } = req.body;
         
-        // Test mode requires image, not prompt
-        if (duration === 'test' && !req.file) {
-            return res.status(400).json({ error: 'Test mode requires an image' });
-        }
-        
-        if (!prompt && duration !== 'test') {
+        if (!prompt) {
             return res.status(400).json({ error: 'Prompt is required' });
         }
         
