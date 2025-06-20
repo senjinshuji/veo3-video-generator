@@ -39,33 +39,15 @@ async function generateVideo(prompt, options = {}) {
 
   console.log('🎬 Starting video generation...');
   
-  // Convert duration to API format
-  let apiDuration;
-  switch(duration) {
-    case '5s':
-    case 'short':
-      apiDuration = '5s';
-      break;
-    case '6s':
-      apiDuration = '6s';
-      break;
-    case '7s':
-      apiDuration = '7s';
-      break;
-    case '8s':
-    case 'medium':
-    case 'long':
-    default:
-      apiDuration = '8s';
-      break;
-  }
+  // Veo3 only supports 8s duration
+  const apiDuration = '8s';
   
   // Prepare input parameters for Veo3
   const input = {
     prompt,
     duration: apiDuration,
     aspect_ratio: aspectRatio,
-    audio_enabled: false // Can be made configurable later
+    generate_audio: false // Can be made configurable later
   };
 
   if (imagePath) {
@@ -93,8 +75,8 @@ async function generateVideo(prompt, options = {}) {
   console.log('🔍 Full input parameters:', JSON.stringify(input, null, 2));
 
   try {
-    // Always use Veo3
-    const apiEndpoint = 'fal-ai/veo3';
+    // Use different endpoint for image-to-video vs text-to-video
+    const apiEndpoint = imagePath ? 'fal-ai/veo3/preview/image-to-video' : 'fal-ai/veo3';
     console.log(`🎯 Using API endpoint: ${apiEndpoint}`);
     
     const result = await fal.subscribe(apiEndpoint, {
@@ -169,17 +151,16 @@ async function main() {
 Usage: npm run generate -- "your prompt here" [options]
 
 Options:
-  --duration <5s|6s|7s|8s|short>  Video duration (short=5s, default: 8s)
   --aspect-ratio <16:9|9:16|1:1>  Aspect ratio (default: 16:9)
   --image <path>                   Use image as input for video generation
   --output <path>                  Save video to file
 
 Examples:
   npm run generate -- "A serene lake at sunset with mountains"
-  npm run generate -- "Dancing robot in neon city" --duration medium --aspect-ratio 9:16
+  npm run generate -- "Dancing robot in neon city" --aspect-ratio 9:16
   npm run generate -- "Underwater coral reef" --output output.mp4
   npm run generate -- "Make the car drive fast" --image car.jpg
-  npm run generate -- "Animate this painting" --image artwork.png --duration long
+  npm run generate -- "Animate this painting" --image artwork.png
     `);
     process.exit(0);
   }
@@ -192,9 +173,6 @@ Examples:
     const value = args[i + 1];
 
     switch (flag) {
-      case '--duration':
-        options.duration = value;
-        break;
       case '--aspect-ratio':
         options.aspectRatio = value;
         break;
