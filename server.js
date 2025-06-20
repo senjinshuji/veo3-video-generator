@@ -64,7 +64,8 @@ app.post('/api/generate', upload.single('image'), async (req, res) => {
         
         // Handle image upload
         if (req.file) {
-            const tempPath = join(__dirname, 'temp', `${taskId}.${req.file.mimetype.split('/')[1]}`);
+            const fileExtension = req.file.originalname.split('.').pop() || req.file.mimetype.split('/')[1];
+            const tempPath = join(__dirname, 'temp', `${taskId}.${fileExtension}`);
             writeFileSync(tempPath, req.file.buffer);
             options.imagePath = tempPath;
         }

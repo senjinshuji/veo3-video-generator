@@ -71,7 +71,7 @@ async function generateVideo(prompt, options = {}) {
   }
 
   console.log(`📝 Prompt: ${prompt}`);
-  console.log(`⏱️  Duration: ${duration}`);
+  console.log(`⏱️  Duration: ${apiDuration}`);
   console.log(`📐 Aspect Ratio: ${aspectRatio}`);
 
   try {
